@@ -14,6 +14,7 @@ import ChatPage from "./pages/ChatPage";
 import { AuthProvider } from "./contexts/AuthContext";
 import PrivateRoute from "./components/PrivateRoute";
 import Layout from "./components/Layout";
+import ChatInterface from "./components/ChatInterface";
 
 const App = () => {
   const queryClient = new QueryClient();
@@ -43,6 +44,14 @@ const App = () => {
                   element={
                     <PrivateRoute>
                       <ChatPage />
+                    </PrivateRoute>
+                  } 
+                />
+                <Route 
+                  path="/chat2" 
+                  element={
+                    <PrivateRoute>
+                      <ChatInterface />
                     </PrivateRoute>
                   } 
                 />

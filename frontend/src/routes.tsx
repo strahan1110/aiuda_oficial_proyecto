@@ -32,6 +32,7 @@ const HomePage = lazy(() => import('./pages/HomePage'));
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
 const ChatPage = lazy(() => import('./pages/ChatPage'));
+const ChatInterface = lazy(() => import('./components/ChatInterface'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 // Create a loading component for suspense fallback
@@ -107,6 +108,10 @@ export const router = createBrowserRouter([
       {
         path: 'chat',
         element: <ChatPage />,
+      },
+      {
+        path: 'chat2',
+        element: <ChatInterface />,
       },
       // Add other authenticated routes here
     ],
