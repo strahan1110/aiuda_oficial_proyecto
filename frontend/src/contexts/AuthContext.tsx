@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/supabase';
-import { Session, User as SupabaseUser } from '@supabase/supabase-js';
+import { Session } from '@supabase/supabase-js';
 
 interface User {
   id: string;
@@ -15,10 +15,14 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   isLoading: boolean;
+  loading: boolean; // For backward compatibility
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  // Add the missing methods
+  signIn: (email: string, password: string) => Promise<void>;
+  signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -275,22 +279,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // Store user in localStorage when it changes
-  useEffect(() => {
-    if (user) {
-      localStorage.setItem('user', JSON.stringify(user));
-    } else {
-      localStorage.removeItem('user');
-    }
-  }, [user]);
 
   const value = {
     user,
     session,
     isLoading,
+    loading: isLoading, // For backward compatibility
     login,
     register,
     logout,
     resetPassword,
+    signIn: login, // Alias for login
+    signOut: logout, // Alias for logout
   };
 
   return (

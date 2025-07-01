@@ -1,171 +1,151 @@
-
 import React, { useState, useEffect } from "react";
-import { 
-  MessageSquare, 
-  Plus,
-  Trash2,
-  Calendar,
-  History,
-  ArrowLeftFromLine
-} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { MessageSquare, Plus } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarMenuAction,
-} from "@/components/ui/sidebar";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger
-} from "@/components/ui/tooltip";
-import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface ChatHistory {
-  id: number;
+  id: string;
   title: string;
   date: string;
 }
 
 const ChatSidebar = () => {
-  const { user } = useAuth();
+  const { user: _user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [chatHistories, setChatHistories] = useState<ChatHistory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const currentChatId = new URLSearchParams(location.search).get("chat");
 
   useEffect(() => {
-    // Simulamos carga de historiales de chat
-    setTimeout(() => {
+    // Simulate loading chat histories
+    const timer = setTimeout(() => {
       setChatHistories([
-        {
-          id: 1,
-          title: "Consulta sobre dolor de cabeza",
-          date: "12/04/2025"
-        },
-        {
-          id: 2,
-          title: "Información sobre medicamentos",
-          date: "10/04/2025"
-        },
-        {
-          id: 3,
-          title: "Síntomas de gripe",
-          date: "08/04/2025"
-        }
+        { id: "1", title: "Chat 1", date: "2023-05-15" },
+        { id: "2", title: "Chat 2", date: "2023-05-14" },
       ]);
       setIsLoading(false);
-    }, 800);
+    }, 500);
+
+    return () => clearTimeout(timer);
   }, []);
 
-  const isActive = (chatId: number) => {
-    // Lógica para determinar si este chat está activo
-    return location.search === `?chat=${chatId}`;
-  };
-  
   const handleNewChat = () => {
-    navigate('/profile#chat');
+    navigate("/chat");
+  };
+
+  const handleDeleteChat = (_chatId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    // Handle delete chat logic here
     toast({
-      title: "Nueva consulta",
-      description: "Iniciando una nueva consulta médica"
+      title: "Chat deleted",
+      description: "The chat has been deleted.",
     });
   };
-  
-  const handleDeleteChat = (id: number, e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    setChatHistories(prev => prev.filter(chat => chat.id !== id));
-    toast({
-      title: "Conversación eliminada",
-      description: "La conversación ha sido eliminada correctamente"
-    });
+
+  const isActive = (chatId: string) => {
+    return chatId === currentChatId;
   };
 
   return (
-    <Sidebar side="left" variant="sidebar" collapsible="icon" className="border-r bg-muted/10">
-      <SidebarHeader className="p-3">
-        <Button className="w-full bg-aiuda-coral hover:bg-aiuda-coral/90 flex items-center gap-2" onClick={handleNewChat}>
+    <div className="flex flex-col h-full border-r bg-muted/10 w-64">
+      <div className="p-3">
+        <Button 
+          className="w-full bg-aiuda-coral hover:bg-aiuda-coral/90 flex items-center gap-2" 
+          onClick={handleNewChat}
+        >
           <Plus size={16} />
-          <span>Nueva consulta</span>
+          Nueva consulta
         </Button>
-      </SidebarHeader>
-
-      <SidebarContent>
-        <ScrollArea className="h-[calc(100vh-120px)]">
-          <div className="mb-2 px-3 py-2">
-            <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">CONSULTAS RECIENTES</h3>
+      </div>
+      <div className="flex-1 overflow-y-auto p-2">
+        <div className="mb-2 px-3 py-2">
+          <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            CONSULTAS RECIENTES
+          </h3>
+        </div>
+        
+        {isLoading ? (
+          <div className="px-4 py-2 text-sm text-muted-foreground">
+            Cargando historiales...
           </div>
-          
-          <SidebarMenu>
-            {isLoading ? (
-              <div className="px-4 py-2 text-sm text-muted-foreground">Cargando historiales...</div>
-            ) : chatHistories.length > 0 ? (
-              <>
-                {chatHistories.map((chat) => (
-                  <SidebarMenuItem key={chat.id}>
-                    <SidebarMenuButton 
-                      asChild 
-                      isActive={isActive(chat.id)}
-                      className="group transition-all hover:bg-muted/50 rounded-md px-3 py-2"
-                    >
-                      <Link to={`/profile?chat=${chat.id}#chat`} className="flex items-start gap-2">
-                        <MessageSquare size={16} className="mt-1 shrink-0" />
-                        <div className="flex flex-col overflow-hidden">
-                          <span className="truncate font-medium">{chat.title}</span>
-                          <span className="text-xs text-muted-foreground">{chat.date}</span>
-                        </div>
-                      </Link>
-                    </SidebarMenuButton>
-                    
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <SidebarMenuAction
-                            onClick={(e) => handleDeleteChat(chat.id, e)}
-                            showOnHover
-                            className="hover:bg-destructive/10 hover:text-destructive"
-                          >
-                            <Trash2 size={14} />
-                          </SidebarMenuAction>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          Eliminar conversación
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </SidebarMenuItem>
-                ))}
-                
-                <SidebarMenuItem>
-                  <SidebarMenuButton 
-                    asChild 
-                    isActive={location.hash === "#history"}
-                    className="mt-2 hover:bg-muted/50 rounded-md px-3 py-2"
+        ) : chatHistories.length > 0 ? (
+          chatHistories.map((chat) => (
+            <div key={chat.id} className="mb-1">
+              <Link
+                to={`/profile?chat=${chat.id}#chat`}
+                className={`flex items-center justify-between w-full p-2 rounded-md hover:bg-accent ${
+                  isActive(chat.id) ? "bg-accent" : ""
+                }`}
+              >
+                <div className="flex items-center gap-2 truncate">
+                  <MessageSquare size={16} className="flex-shrink-0" />
+                  <div className="flex flex-col">
+                    <span className="truncate font-medium">{chat.title}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {chat.date}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  className="opacity-0 group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive p-1 rounded"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleDeleteChat(chat.id, e);
+                  }}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                   >
-                    <Link to="/profile?tab=history#history">
-                      <Calendar size={16} />
-                      <span>Ver historial completo</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </>
-            ) : (
-              <div className="px-4 py-2 text-sm text-muted-foreground">No hay conversaciones previas</div>
-            )}
-          </SidebarMenu>
-        </ScrollArea>
-      </SidebarContent>
-    </Sidebar>
+                    <path d="M3 6h18" />
+                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                  </svg>
+                </button>
+              </Link>
+            </div>
+          ))
+        ) : (
+          <div className="px-4 py-2 text-sm text-muted-foreground">
+            No hay conversaciones previas
+          </div>
+        )}
+      </div>
+      <div className="p-3 border-t">
+        <Button variant="ghost" className="w-full justify-start gap-2" asChild>
+          <Link to="/profile?tab=history#history">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
+              <line x1="16" x2="16" y1="2" y2="6" />
+              <line x1="8" x2="8" y1="2" y2="6" />
+              <line x1="3" x2="21" y1="10" y2="10" />
+            </svg>
+            <span>Ver historial completo</span>
+          </Link>
+        </Button>
+      </div>
+    </div>
   );
 };
 

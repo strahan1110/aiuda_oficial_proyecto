@@ -1,3 +1,5 @@
+import { useCallback } from 'react';
+
 // Simple toast implementation that logs to console
 const toast = ({
   title,
@@ -19,4 +21,19 @@ const toast = ({
   return Math.random().toString(36).substring(2, 9);
 };
 
-export { toast }
+// Hook to use toast
+const useToast = () => {
+  const showToast = useCallback(({ title, description, variant = 'default' }: {
+    title: string;
+    description?: string;
+    variant?: 'default' | 'destructive';
+  }) => {
+    return toast({ title, description, variant });
+  }, []);
+
+  return {
+    toast: showToast,
+  };
+};
+
+export { toast, useToast };

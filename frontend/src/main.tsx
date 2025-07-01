@@ -14,7 +14,7 @@ const queryClient = new QueryClient();
 const App = () => (
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+      <ThemeProvider defaultTheme="light">
         <Toaster position="top-center" richColors />
         <RouterProvider router={router} />
       </ThemeProvider>

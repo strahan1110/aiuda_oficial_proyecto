@@ -5,29 +5,27 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Checkbox } from "../../components/ui/checkbox";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const { signIn, user } = useAuth();
+  const { signIn } = useAuth();
   const navigate = useNavigate();
-
-  // Si el usuario ya está autenticado, redirigir a la página principal
-  //if (user) {
-    //navigate("/");
-    //return null;
-  //} 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await signIn(email, password);
-    if (!error) {
+    try {
+      await signIn(email, password);
       navigate("/");
+    } catch (error) {
+      console.error('Login error:', error);
+      // Handle error (e.g., show error message to user)
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (

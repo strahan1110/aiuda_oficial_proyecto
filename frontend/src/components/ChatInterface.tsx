@@ -29,7 +29,7 @@ export default function ChatInterface() {
   }, [currentMessages]);
 
   // Función para enviar mensaje al chatbot (Stack AI)
-  const sendToStackAI = async (message: string, history: any[]): Promise<string> => {
+  const sendToStackAI = async (message: string, _history: any[]): Promise<string> => {
     try {
       console.log('Enviando mensaje a Stack AI:', message);
       
