@@ -9,7 +9,7 @@ const Navbar = () => {
   const location = useLocation();
 
   // Hide navbar on login and register pages
-  if (['/login', '/register', '/chat'].includes(location.pathname)) {
+  if (['/login', '/register', '/chatbot'].includes(location.pathname)) {
     return null;
   }
 

@@ -43,7 +43,7 @@ const Register = () => {
         title: '¡Bienvenido!',
         description: `¡Cuenta creada exitosamente, ${name || email}!`,
       });
-      navigate('/chat');
+      navigate('/chatbot');
     } catch (error) {
       console.error('Error en registro:', error);
       toast({

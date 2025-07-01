@@ -1,8 +1,9 @@
-// src/components/ChatInterface.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import useChatHistory from '../hooks/useChatHistory';
 import ChatHistory from './ChatHistory';
-import { Send, Bot, User, Stethoscope, MessageCircle } from 'lucide-react';
+import { Send, Bot, User, MessageCircle, Loader2 } from 'lucide-react';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 export default function ChatInterface() {
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
@@ -29,11 +30,8 @@ export default function ChatInterface() {
   }, [currentMessages]);
 
   // Función para enviar mensaje al chatbot (Stack AI)
-  const sendToStackAI = async (message: string, _history: any[]): Promise<string> => {
+  const sendToStackAI = async (message: string): Promise<string> => {
     try {
-      console.log('Enviando mensaje a Stack AI:', message);
-      
-      // Preparar el mensaje en el formato que espera Stack AI
       const requestBody = {
         "in-1": message
       };
@@ -47,28 +45,17 @@ export default function ChatInterface() {
         },
         body: JSON.stringify(requestBody)
       });
-
-      console.log('Respuesta de Stack AI - Estado:', response.status);
       
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Error en la respuesta de Stack AI:', errorText);
-        throw new Error(`Error ${response.status}: ${errorText}`);
+        throw new Error(`Error ${response.status}: ${await response.text()}`);
       }
 
       const data = await response.json();
-      console.log('Respuesta completa de Stack AI:', data);
-      
-      // Extraer la respuesta del formato de salida de Stack AI
-      const responseText = data.outputs?.['out-0'] || 
-                         data.outputs?.['out-1'] || 
-                         'Lo siento, no pude procesar tu consulta.';
-      
-      return responseText || 'No se pudo obtener una respuesta válida.';
+      return data.outputs?.['out-0'] || data.outputs?.['out-1'] || 'No pude procesar tu consulta.';
       
     } catch (error) {
       console.error('Error llamando a Stack AI:', error);
-      return 'Lo siento, hubo un error al procesar tu consulta médica. Por favor intenta nuevamente más tarde.';
+      return 'Lo siento, hubo un error al procesar tu consulta. Por favor intenta nuevamente más tarde.';
     }
   };
 
@@ -90,14 +77,13 @@ export default function ChatInterface() {
       }
 
       // Enviar a Stack AI y obtener respuesta
-      const botResponse = await sendToStackAI(userMessage, currentMessages);
+      const botResponse = await sendToStackAI(userMessage);
 
       // Guardar respuesta del bot
       await addMessage(currentChatId, botResponse, 'assistant');
 
     } catch (error) {
       console.error('Error sending message:', error);
-      // Mostrar mensaje de error al usuario
       await addMessage(currentChatId, 'Hubo un error al procesar tu mensaje. Por favor intenta nuevamente.', 'assistant');
     } finally {
       setIsLoading(false);
@@ -125,167 +111,197 @@ export default function ChatInterface() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-100">
-      <ChatHistory 
-        onSelectChat={handleSelectChat}
-        currentChatId={currentChatId || undefined}
-      />
-      
-      <div className="flex-1 flex flex-col bg-white">
-        {/* Header */}
-        <div className="border-b bg-white px-6 py-4 shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 rounded-full">
-              <Stethoscope className="w-5 h-5 text-blue-600" />
-            </div>
-            <div>
-              <h1 className="text-lg font-semibold text-gray-900">
-                Asistente Médico UTP
-              </h1>
-              <p className="text-sm text-gray-500">
-                Tu consulta médica personalizada
-              </p>
-            </div>
+    <div className="flex flex-col h-screen bg-gradient-to-br from-gray-50 to-blue-50 overflow-hidden">
+      {/* Header */}
+      <header className="sticky top-0 z-30 bg-gradient-to-r from-blue-600 to-blue-700 text-white p-3 shadow-lg backdrop-blur-sm bg-opacity-95">
+        <div className="container mx-auto max-w-7xl flex items-center">
+          <div className="bg-white/20 p-2 rounded-full mr-3 flex-shrink-0 transform transition-transform hover:scale-105">
+            <Bot className="h-6 w-6" />
+          </div>
+          <div className="min-w-0">
+            <h1 className="text-xl font-bold truncate flex items-center">
+              AIUDA - Asistente de Salud
+              <span className="ml-2 px-2 py-0.5 text-xs bg-white/20 rounded-full">Beta</span>
+            </h1>
+            <p className="text-sm text-blue-100 truncate flex items-center">
+              <span className="inline-block w-2 h-2 rounded-full bg-green-300 mr-2 animate-pulse"></span>
+              En línea - Estoy aquí para ayudarte
+            </p>
+          </div>
+        </div>
+      </header>
+
+      <div className="flex flex-1 overflow-hidden">
+        {/* Sidebar */}
+        <div className="w-64 bg-white border-r border-gray-200 overflow-y-auto flex flex-col">
+          <div className="p-4 border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-800">Historial de Chats</h2>
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            <ChatHistory 
+              onSelectChat={handleSelectChat}
+              currentChatId={currentChatId || undefined}
+            />
+          </div>
+          
+          <div className="p-4 border-t border-gray-200">
+            <button
+              onClick={handleNewChat}
+              className="w-full flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <MessageCircle className="w-5 h-5 mr-2" />
+              Nuevo chat
+            </button>
           </div>
         </div>
 
-        {/* Messages Area */}
-        <div className="flex-1 overflow-y-auto p-6">
+        {/* Main Chat Area */}
+        <div className="flex-1 flex flex-col">
           {currentChatId ? (
-            <div className="space-y-6 max-w-4xl mx-auto">
-              {currentMessages.length === 0 && !isLoading && (
-                <div className="text-center py-12">
-                  <div className="p-4 bg-blue-50 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                    <Bot className="w-8 h-8 text-blue-600" />
-                  </div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    ¡Hola! Soy tu asistente médico
-                  </h3>
-                  <p className="text-gray-600 max-w-md mx-auto">
-                    Puedes hacerme preguntas sobre síntomas, medicamentos, o cualquier consulta médica. 
-                    Estoy aquí para ayudarte.
-                  </p>
-                </div>
-              )}
-
-              {currentMessages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex gap-4 ${
-                    message.role === 'user' ? 'flex-row-reverse' : 'flex-row'
-                  }`}
-                >
-                  <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-                    message.role === 'user' 
-                      ? 'bg-blue-600 text-white' 
-                      : 'bg-gray-200 text-gray-600'
-                  }`}>
-                    {message.role === 'user' ? <User size={16} /> : <Bot size={16} />}
-                  </div>
-                  
-                  <div className={`flex-1 max-w-3xl ${
-                    message.role === 'user' ? 'text-right' : 'text-left'
-                  }`}>
-                    <div className={`inline-block px-4 py-3 rounded-2xl ${
-                      message.role === 'user'
-                        ? 'bg-blue-600 text-white rounded-br-sm'
-                        : 'bg-gray-100 text-gray-900 rounded-bl-sm'
-                    }`}>
-                      <div className="whitespace-pre-wrap">{message.content}</div>
+            <>
+              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                {currentMessages.length === 0 && (
+                  <div className="text-center py-12">
+                    <div className="p-4 bg-blue-50 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                      <Bot className="w-8 h-8 text-blue-600" />
                     </div>
-                    <div className={`text-xs text-gray-500 mt-1 ${
-                      message.role === 'user' ? 'text-right' : 'text-left'
-                    }`}>
-                      {new Date(message.created_at).toLocaleTimeString('es-ES', {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                      ¡Hola! Soy tu asistente médico
+                    </h3>
+                    <p className="text-gray-600 max-w-md mx-auto">
+                      Puedes hacerme preguntas sobre síntomas, medicamentos o cualquier consulta médica.
+                      Estoy aquí para ayudarte.
+                    </p>
                   </div>
-                </div>
-              ))}
+                )}
 
-              {isLoading && (
-                <div className="flex gap-4">
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-200 text-gray-600 flex items-center justify-center">
-                    <Bot size={16} />
-                  </div>
-                  <div className="flex-1">
-                    <div className="inline-block px-4 py-3 bg-gray-100 rounded-2xl rounded-bl-sm">
-                      <div className="flex items-center gap-2">
-                        <div className="flex gap-1">
-                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                        </div>
-                        <span className="text-sm text-gray-600">Analizando tu consulta...</span>
+                {currentMessages.map((message, index) => (
+                  <div
+                    key={index}
+                    className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div
+                      className={`max-w-3/4 rounded-lg p-4 shadow ${
+                        message.role === 'user'
+                          ? 'bg-blue-600 text-white rounded-br-none'
+                          : 'bg-white text-gray-800 rounded-bl-none border border-gray-200'
+                      }`}
+                    >
+                      <div className="flex items-center mb-1">
+                        {message.role === 'assistant' ? (
+                          <Bot className="w-4 h-4 mr-2 text-blue-400" />
+                        ) : (
+                          <User className="w-4 h-4 mr-2 text-blue-100" />
+                        )}
+                        <span className={`text-xs font-medium ${
+                          message.role === 'user' ? 'text-blue-100' : 'text-gray-500'
+                        }`}>
+                          {message.role === 'assistant' ? 'AIUDA' : 'Tú'}
+                        </span>
+                      </div>
+                      <p className="whitespace-pre-wrap">{message.content}</p>
+                      <div className={`text-xs mt-1 ${
+                        message.role === 'user' ? 'text-blue-200' : 'text-gray-400'
+                      }`}>
+                        {format(new Date(message.created_at), 'HH:mm', { locale: es })}
                       </div>
                     </div>
                   </div>
-                </div>
-              )}
-              
-              <div ref={messagesEndRef} />
-            </div>
-          ) : (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center">
-                <div className="p-6 bg-blue-50 rounded-full w-24 h-24 mx-auto mb-6 flex items-center justify-center">
-                  <MessageCircle className="w-12 h-12 text-blue-600" />
-                </div>
-                <h3 className="text-xl font-medium text-gray-900 mb-2">
-                  Selecciona o crea una conversación
-                </h3>
-                <p className="text-gray-600 mb-6">
-                  Elige una conversación existente o inicia una nueva consulta médica
-                </p>
-                <button
-                  onClick={handleNewChat}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                >
-                  Iniciar Nueva Consulta
-                </button>
+                ))}
+                
+                {isLoading && (
+                  <div className="flex items-start gap-3">
+                    <div className="bg-gray-100 p-2 rounded-full">
+                      <Bot className="w-5 h-5 text-gray-500" />
+                    </div>
+                    <div className="flex items-center gap-2 bg-white p-3 rounded-lg border border-gray-200">
+                      <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+                      <span className="text-sm text-gray-600">Pensando...</span>
+                    </div>
+                  </div>
+                )}
+                
+                <div ref={messagesEndRef} />
               </div>
+
+              {/* Input Area */}
+              <div className="border-t border-gray-200 p-4 bg-white">
+                <form 
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleSendMessage();
+                  }} 
+                  className="flex space-x-2 max-w-4xl mx-auto w-full"
+                >
+                  <div className="flex-1">
+                    <input
+                      type="text"
+                      value={inputMessage}
+                      onChange={(e) => setInputMessage(e.target.value)}
+                      onKeyPress={handleKeyPress}
+                      placeholder="Escribe tu mensaje..."
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      disabled={isLoading}
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={!inputMessage.trim() || isLoading}
+                    className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                  >
+                    {isLoading ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <>
+                        <Send className="w-5 h-5 mr-2" />
+                        Enviar
+                      </>
+                    )}
+                  </button>
+                </form>
+              </div>
+            </>
+          ) : (
+            <div className="flex-1 flex flex-col items-center justify-center bg-gradient-to-b from-white to-blue-50 p-8">
+              <div className="bg-blue-100 p-6 rounded-full mb-6 shadow-inner">
+                <MessageCircle className="w-16 h-16 text-blue-600" />
+              </div>
+              <h2 className="text-3xl font-bold text-gray-800 mb-4 text-center">
+                AIUDA - Asistente de Salud
+              </h2>
+              <p className="text-gray-600 text-center max-w-2xl mb-8 text-lg">
+                Bienvenido al asistente de salud de AIUDA. Estoy aquí para ayudarte con información médica confiable y orientación profesional.
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl w-full mb-8">
+                <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                  <h3 className="font-semibold text-gray-800 mb-2">¿Cómo funciona?</h3>
+                  <p className="text-sm text-gray-600">
+                    1. Describe tus síntomas o pregunta lo que necesites saber.
+                    <br />
+                    2. Recibe información médica confiable.
+                    <br />
+                    3. Obtén recomendaciones personalizadas.
+                  </p>
+                </div>
+                <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm">
+                  <h3 className="font-semibold text-gray-800 mb-2">Recuerda</h3>
+                  <p className="text-sm text-gray-600">
+                    • Este es un asistente virtual y no reemplaza la consulta médica profesional.
+                    <br />
+                    • En caso de emergencia, busca atención médica inmediata.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={handleNewChat}
+                className="flex items-center px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl"
+              >
+                <MessageCircle className="w-5 h-5 mr-2" />
+                Comenzar nueva conversación
+              </button>
             </div>
           )}
         </div>
-
-        {/* Input Area */}
-        {currentChatId && (
-          <div className="border-t bg-white px-6 py-4">
-            <div className="max-w-4xl mx-auto">
-              <div className="flex gap-3 items-end">
-                <div className="flex-1">
-                  <textarea
-                    value={inputMessage}
-                    onChange={(e) => setInputMessage(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    placeholder="Describe tus síntomas o haz tu consulta médica..."
-                    className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                    rows={1}
-                    style={{ minHeight: '48px', maxHeight: '120px' }}
-                    disabled={isLoading}
-                  />
-                </div>
-                <button
-                  onClick={handleSendMessage}
-                  disabled={isLoading || !inputMessage.trim()}
-                  className="p-3 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
-                  title="Enviar mensaje"
-                >
-                  <Send size={20} />
-                </button>
-              </div>
-              
-              <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
-                <span>Presiona Enter para enviar, Shift+Enter para nueva línea</span>
-                <span className={inputMessage.length > 500 ? 'text-red-500' : ''}>
-                  {inputMessage.length}/1000
-                </span>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

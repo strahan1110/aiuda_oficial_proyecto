@@ -34,7 +34,7 @@ const ChatSidebar = () => {
   }, []);
 
   const handleNewChat = () => {
-    navigate("/chat");
+    navigate("/chatbot");
   };
 
   const handleDeleteChat = (_chatId: string, e: React.MouseEvent) => {

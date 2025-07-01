@@ -58,7 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: '¡Bienvenido de nuevo!',
       });
       
-      navigate('/chat');
+      navigate('/chatbot');
     } catch (error) {
       console.error('Login error:', error);
       toast({

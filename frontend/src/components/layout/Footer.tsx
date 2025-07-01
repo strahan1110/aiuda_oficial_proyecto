@@ -6,7 +6,7 @@ const Footer = () => {
 
   // Hide footer on chat page
   const location = useLocation();
-  if (['/chat'].includes(location.pathname)) {
+  if (['/chatbot'].includes(location.pathname)) {
     return null;
   }
 

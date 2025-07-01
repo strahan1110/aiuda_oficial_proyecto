@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
 import { useNavbarVisibility } from '@/hooks/useNavbarVisibility';
+import LogoLoader from './LogoLoader';
 
 interface PageTransitionProps {
   children: React.ReactNode;
@@ -14,8 +15,17 @@ export function PageTransition({ children, className = '' }: PageTransitionProps
   const [displayChildren, setDisplayChildren] = useState(children);
   const loadingRef = useRef<HTMLDivElement>(null);
   const isNavbarVisible = useNavbarVisibility();
+  
+  // No mostrar animación en la página de login
+  const isLoginPage = location.pathname === '/login' || location.pathname === '/auth/login';
 
   useEffect(() => {
+    // No mostrar animación en la página de login
+    if (isLoginPage) {
+      setIsLoading(false);
+      return;
+    }
+    
     // Show loading overlay
     setIsLoading(true);
     
@@ -51,13 +61,16 @@ export function PageTransition({ children, className = '' }: PageTransitionProps
   return (
     <div className={`relative ${className}`}>
       {/* Loading Overlay */}
-      <div 
-        ref={loadingRef} 
-        className="loading-overlay"
-        style={!isLoading ? { display: 'none' } : {}}
-      >
-        <div className="loading-spinner"></div>
-      </div>
+      {!isLoginPage && (
+        <div 
+          ref={loadingRef} 
+          className="loading-overlay flex flex-col items-center justify-center bg-white"
+          style={!isLoading ? { display: 'none' } : {}}
+        >
+          <LogoLoader isLoading={isLoading} size={120} />
+          <p className="mt-4 text-gray-600 text-lg font-medium">Cargando...</p>
+        </div>
+      )}
 
       {/* Page Content */}
       <TransitionGroup component={null}>

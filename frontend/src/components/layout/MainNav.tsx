@@ -22,7 +22,7 @@ const MainNav = () => {
           {user ? (
             <>
               <Button variant="ghost" asChild>
-                <Link to="/chat">Chat</Link>
+                <Link to="/chatbot">Chat</Link>
               </Button>
               <Button variant="ghost" asChild>
                 <Link to="/profile">Perfil</Link>

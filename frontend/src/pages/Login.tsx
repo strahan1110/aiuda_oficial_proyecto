@@ -48,8 +48,8 @@ const Login = () => {
         description: 'Inicio de sesión exitoso',
       });
       
-      // Redirigir al dashboard o a la página principal
-      navigate('/chat');
+      // Redirigir al chatbot después del inicio de sesión
+      navigate('/chatbot');
     } catch (error: any) {
       console.error('Error en inicio de sesión:', error);
       
