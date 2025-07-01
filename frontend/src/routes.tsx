@@ -12,20 +12,6 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   size?: 'default' | 'sm' | 'lg' | 'icon';
 }
 
-const Button = ({ 
-  children = null, 
-  variant = 'default',
-  size = 'default',
-  className = '',
-  ...props 
-}: ButtonProps) => (
-  <button 
-    {...props} 
-    className={`px-4 py-2 bg-blue-500 text-white rounded ${className}`}
-  >
-    {children}
-  </button>
-);
 
 // Lazy load pages for better performance
 const HomePage = lazy(() => import('./pages/HomePage'));
