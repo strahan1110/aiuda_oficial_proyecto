@@ -96,7 +96,7 @@ const HomePage = () => {
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
               <Button asChild size="lg" className="bg-aiuda-coral hover:bg-aiuda-coral/90 text-white">
-                <Link to="/chatbot">
+                <Link to="/auth/login">
                   Comenzar ahora <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
@@ -124,7 +124,7 @@ const HomePage = () => {
                   Consulta síntomas, obtén recomendaciones y encuentra centros de salud cercanos.
                 </p>
                 <Button className="w-full bg-aiuda-coral hover:bg-aiuda-coral/90" asChild>
-                  <Link to="/chatbot">Hacer una consulta</Link>
+                  <Link to="/auth/login">Hacer una consulta</Link>
                 </Button>
               </div>
             </div>

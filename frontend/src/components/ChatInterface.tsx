@@ -122,6 +122,8 @@ export default function ChatInterface() {
             <h1 className="text-xl font-bold truncate flex items-center">
               AIUDA - Asistente de Salud
               <span className="ml-2 px-2 py-0.5 text-xs bg-white/20 rounded-full">Beta</span>
+              <span className="ml-2 px-2 py-0.5 text-xs bg-white/20 rounded-full cursor-pointer" onClick={() => window.location.href = '/'}>Salir</span>
+
             </h1>
             <p className="text-sm text-blue-100 truncate flex items-center">
               <span className="inline-block w-2 h-2 rounded-full bg-green-300 mr-2 animate-pulse"></span>
