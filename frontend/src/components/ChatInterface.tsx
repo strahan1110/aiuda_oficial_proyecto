@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import useChatHistory from '../hooks/useChatHistory';
 import ChatHistory from './ChatHistory';
-import { Send, Bot, User, MessageCircle, Loader2 } from 'lucide-react';
+import { Send, Bot, User, MessageCircle, Loader2, Menu, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -9,6 +10,8 @@ export default function ChatInterface() {
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const navigate = useNavigate();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   const {
@@ -114,16 +117,26 @@ export default function ChatInterface() {
     <div className="flex flex-col h-screen bg-gradient-to-br from-gray-50 to-blue-50 overflow-hidden">
       {/* Header */}
       <header className="sticky top-0 z-30 bg-gradient-to-r from-blue-600 to-blue-700 text-white p-3 shadow-lg backdrop-blur-sm bg-opacity-95">
-        <div className="container mx-auto max-w-7xl flex items-center">
-          <div className="bg-white/20 p-2 rounded-full mr-3 flex-shrink-0 transform transition-transform hover:scale-105">
+        <button 
+          onClick={() => setIsHistoryOpen(!isHistoryOpen)}
+          className="md:hidden absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-full hover:bg-white/20 transition-colors"
+          aria-label="Toggle sidebar"
+        >
+          {isHistoryOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+        </button>
+        <div className="container mx-auto max-w-4xl flex items-center">
+          <button 
+            onClick={() => window.location.href = '/'}
+            className="bg-white/20 p-2 rounded-full mr-3 flex-shrink-0 transform transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-white/50"
+            aria-label="Volver a la página principal"
+          >
             <Bot className="h-6 w-6" />
-          </div>
+          </button>
           <div className="min-w-0">
             <h1 className="text-xl font-bold truncate flex items-center">
               AIUDA - Asistente de Salud
               <span className="ml-2 px-2 py-0.5 text-xs bg-white/20 rounded-full">Beta</span>
               <span className="ml-2 px-2 py-0.5 text-xs bg-white/20 rounded-full cursor-pointer" onClick={() => window.location.href = '/'}>Salir</span>
-
             </h1>
             <p className="text-sm text-blue-100 truncate flex items-center">
               <span className="inline-block w-2 h-2 rounded-full bg-green-300 mr-2 animate-pulse"></span>
@@ -133,9 +146,10 @@ export default function ChatInterface() {
         </div>
       </header>
 
+      {/* Main Content with Sidebar */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar */}
-        <div className="w-64 bg-white border-r border-gray-200 overflow-y-auto flex flex-col">
+        {/* Sidebar - Desktop */}
+        <div className="hidden md:flex flex-col w-64 bg-white border-r border-gray-200 overflow-y-auto">
           <div className="p-4 border-b border-gray-200">
             <h2 className="text-lg font-semibold text-gray-800">Historial de Chats</h2>
           </div>
@@ -145,7 +159,6 @@ export default function ChatInterface() {
               currentChatId={currentChatId || undefined}
             />
           </div>
-          
           <div className="p-4 border-t border-gray-200">
             <button
               onClick={handleNewChat}
@@ -156,28 +169,61 @@ export default function ChatInterface() {
             </button>
           </div>
         </div>
+        
+        {/* Mobile Sidebar Overlay */}
+        {isHistoryOpen && (
+          <div 
+            className="fixed inset-0 bg-black/50 z-10 md:hidden"
+            onClick={() => setIsHistoryOpen(false)}
+          >
+            <div 
+              className="absolute inset-y-0 left-0 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="p-4 border-b border-gray-200 flex justify-between items-center">
+                <h2 className="text-lg font-semibold text-gray-800">Historial</h2>
+                <button 
+                  onClick={() => setIsHistoryOpen(false)}
+                  className="p-1 rounded-full hover:bg-gray-100"
+                  aria-label="Cerrar menú"
+                >
+                  <X className="w-5 h-5 text-gray-500" />
+                </button>
+              </div>
+              <div className="h-[calc(100%-56px)] overflow-y-auto">
+                <ChatHistory 
+                  onSelectChat={(id) => {
+                    handleSelectChat(id);
+                    setIsHistoryOpen(false);
+                  }} 
+                  currentChatId={currentChatId || undefined}
+                />
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Main Chat Area */}
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col overflow-hidden bg-white md:bg-transparent">
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto p-4 pb-24 md:pb-4 space-y-4 container mx-auto max-w-4xl w-full">
           {currentChatId ? (
             <>
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {currentMessages.length === 0 && (
-                  <div className="text-center py-12">
-                    <div className="p-4 bg-blue-50 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                      <Bot className="w-8 h-8 text-blue-600" />
-                    </div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">
-                      ¡Hola! Soy tu asistente médico
-                    </h3>
-                    <p className="text-gray-600 max-w-md mx-auto">
-                      Puedes hacerme preguntas sobre síntomas, medicamentos o cualquier consulta médica.
-                      Estoy aquí para ayudarte.
-                    </p>
+              {currentMessages.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="p-4 bg-blue-50 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                    <Bot className="w-8 h-8 text-blue-600" />
                   </div>
-                )}
-
-                {currentMessages.map((message, index) => (
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    ¡Hola! Soy tu asistente médico
+                  </h3>
+                  <p className="text-gray-600 max-w-md mx-auto">
+                    Puedes hacerme preguntas sobre síntomas, medicamentos o cualquier consulta médica.
+                    Estoy aquí para ayudarte.
+                  </p>
+                </div>
+              ) : (
+                currentMessages.map((message, index) => (
                   <div
                     key={index}
                     className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
@@ -209,31 +255,30 @@ export default function ChatInterface() {
                       </div>
                     </div>
                   </div>
-                ))}
-                
-                {isLoading && (
-                  <div className="flex items-start gap-3">
-                    <div className="bg-gray-100 p-2 rounded-full">
-                      <Bot className="w-5 h-5 text-gray-500" />
-                    </div>
-                    <div className="flex items-center gap-2 bg-white p-3 rounded-lg border border-gray-200">
-                      <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
-                      <span className="text-sm text-gray-600">Pensando...</span>
-                    </div>
+                ))
+              )}
+              {isLoading && (
+                <div className="flex items-start gap-3">
+                  <div className="bg-gray-100 p-2 rounded-full">
+                    <Bot className="w-5 h-5 text-gray-500" />
                   </div>
-                )}
-                
-                <div ref={messagesEndRef} />
-              </div>
-
+                  <div className="flex items-center gap-2 bg-white p-3 rounded-lg border border-gray-200">
+                    <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+                    <span className="text-sm text-gray-600">Pensando...</span>
+                  </div>
+                </div>
+              )}
+              
+              <div ref={messagesEndRef} />
+              
               {/* Input Area */}
-              <div className="border-t border-gray-200 p-4 bg-white">
+              <div className="border-t border-gray-200 p-3 bg-white fixed bottom-0 left-0 right-0 md:relative md:p-4 z-10">
                 <form 
                   onSubmit={(e) => {
                     e.preventDefault();
                     handleSendMessage();
                   }} 
-                  className="flex space-x-2 max-w-4xl mx-auto w-full"
+                  className="flex gap-2 max-w-4xl mx-auto w-full"
                 >
                   <div className="flex-1">
                     <input
@@ -242,22 +287,27 @@ export default function ChatInterface() {
                       onChange={(e) => setInputMessage(e.target.value)}
                       onKeyPress={handleKeyPress}
                       placeholder="Escribe tu mensaje..."
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
+                      style={{
+                        minHeight: '3rem',
+                        lineHeight: '1.5',
+                        WebkitAppearance: 'none'
+                      }}
                       disabled={isLoading}
                     />
                   </div>
                   <button
                     type="submit"
                     disabled={!inputMessage.trim() || isLoading}
-                    className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                    className="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-blue-600 text-white rounded-full hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{
+                      minWidth: '3rem'
+                    }}
                   >
                     {isLoading ? (
                       <Loader2 className="w-5 h-5 animate-spin" />
                     ) : (
-                      <>
-                        <Send className="w-5 h-5 mr-2" />
-                        Enviar
-                      </>
+                      <Send className="w-5 h-5" />
                     )}
                   </button>
                 </form>
@@ -303,6 +353,7 @@ export default function ChatInterface() {
               </button>
             </div>
           )}
+          </div>
         </div>
       </div>
     </div>

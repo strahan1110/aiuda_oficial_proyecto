@@ -94,14 +94,11 @@ const HomePage = () => {
               Obtén información médica confiable al instante para estudiantes de la UTP y público en general
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+            <div className="flex justify-center md:justify-start">
               <Button asChild size="lg" className="bg-aiuda-coral hover:bg-aiuda-coral/90 text-white">
                 <Link to="/auth/login">
                   Comenzar ahora <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
-              </Button>
-              <Button size="lg" variant="outline" className="border-aiuda-blue text-aiuda-blue hover:bg-aiuda-blue/10">
-                Aprender más
               </Button>
             </div>
           </div>

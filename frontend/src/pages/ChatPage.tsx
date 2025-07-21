@@ -2,9 +2,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import { sendMessage } from '@/services/chatService';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Send, Bot, Loader2 } from 'lucide-react';
+import { Send, Bot, Loader2, Menu, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import ChatHistory from '@/components/ChatHistory';
 
 interface Message {
   id: string;
@@ -14,6 +15,7 @@ interface Message {
 }
 
 const ChatPage: React.FC = () => {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -85,6 +87,13 @@ const ChatPage: React.FC = () => {
     <div className="flex flex-col h-screen bg-gradient-to-br from-gray-50 to-blue-50 overflow-hidden">
       {/* Header */}
       <header className="sticky top-0 z-30 bg-gradient-to-r from-blue-600 to-blue-700 text-white p-3 shadow-lg backdrop-blur-sm bg-opacity-95">
+        <button 
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          className="md:hidden absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-full hover:bg-white/20 transition-colors"
+          aria-label="Toggle sidebar"
+        >
+          {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
+        </button>
         <div className="container mx-auto max-w-4xl flex items-center">
           <div className="bg-white/20 p-2 rounded-full mr-3 flex-shrink-0 transform transition-transform hover:scale-105">
             <Bot className="h-6 w-6" />
@@ -104,12 +113,31 @@ const ChatPage: React.FC = () => {
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="flex-1 overflow-hidden flex flex-col">
+      {/* Main Content with Sidebar */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Sidebar - Hidden on mobile by default */}
+        <div 
+          className={`fixed inset-y-0 left-0 z-20 w-64 transform ${
+            isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          } md:translate-x-0 md:relative transition-transform duration-300 ease-in-out bg-white shadow-lg md:shadow-none`}
+        >
+          <ChatHistory onSelectChat={() => {}} />
+        </div>
+        
+        {/* Overlay for mobile when sidebar is open */}
+        {isSidebarOpen && (
+          <div 
+            className="fixed inset-0 bg-black/50 z-10 md:hidden"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
+        
+        {/* Main Chat Area */}
+        <main className="flex-1 overflow-hidden flex flex-col bg-white md:bg-transparent">
         {/* Messages Container */}
         <div className="flex-1 overflow-y-auto">
           <div 
-            className="p-4 space-y-4 container mx-auto max-w-4xl w-full scrollbar-thin scrollbar-thumb-blue-200 scrollbar-track-transparent scrollbar-thumb-rounded-full"
+            className="p-4 space-y-4 container mx-auto max-w-4xl w-full scrollbar-thin scrollbar-thumb-blue-200 scrollbar-track-transparent scrollbar-thumb-rounded-full pb-24 md:pb-4"
             style={{
               scrollBehavior: 'smooth',
               scrollPadding: '1rem',
@@ -194,11 +222,12 @@ const ChatPage: React.FC = () => {
             <div ref={messagesEndRef} className="h-4 flex-shrink-0" />
           </div>
         </div>
-      </main>
+        </main>
+      </div>
 
       {/* Input Area - Fixed at bottom */}
       <footer 
-        className="bg-white/95 backdrop-blur-sm border-t border-gray-100 p-4 shadow-inner sticky bottom-0 z-20"
+        className="bg-white/95 backdrop-blur-sm border-t border-gray-100 p-4 fixed bottom-0 left-0 right-0 z-20 md:sticky"
         style={{
           boxShadow: '0 -4px 6px -1px rgba(0, 0, 0, 0.05), 0 -2px 4px -1px rgba(0, 0, 0, 0.03)',
           paddingBottom: 'max(1rem, env(safe-area-inset-bottom, 1rem))',

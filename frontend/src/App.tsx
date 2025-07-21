@@ -49,7 +49,7 @@ const App = () => {
                   path="/chatbot" 
                   element={
                     <PrivateRoute>
-                      <ChatInterface />
+                      <ChatPage />
                     </PrivateRoute>
                   } 
                 />

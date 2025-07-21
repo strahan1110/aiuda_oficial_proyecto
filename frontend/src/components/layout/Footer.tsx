@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { Facebook, Twitter, Instagram, Mail, Phone, MapPin, MessageSquare, Heart, Shield } from 'lucide-react';
 
 const Footer = () => {
@@ -11,22 +11,75 @@ const Footer = () => {
   }
 
   
+  const scrollToSection = (e: React.MouseEvent, sectionId: string) => {
+    e.preventDefault();
+    if (location.pathname !== '/') {
+      window.location.href = `/${sectionId}`;
+      return;
+    }
+    const element = document.getElementById(sectionId.replace('#', ''));
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  interface FooterLink {
+    name: string;
+    path: string;
+    icon: React.ReactNode;
+    onClick?: (e: React.MouseEvent) => void;
+  }
+
   const footerLinks = [
     {
       title: 'Navegación',
       links: [
-        { name: 'Inicio', path: '/', icon: <MessageSquare className="h-4 w-4 mr-2" /> },
-        { name: 'Características', path: '#features', icon: <MessageSquare className="h-4 w-4 mr-2" /> },
-        { name: 'Cómo Funciona', path: '#how-it-works', icon: <MessageSquare className="h-4 w-4 mr-2" /> },
-      ],
+        { 
+          name: 'Inicio', 
+          path: '/', 
+          icon: <MessageSquare className="h-4 w-4 mr-2" />,
+          onClick: (e: React.MouseEvent) => {
+            e.preventDefault();
+            if (location.pathname !== '/') {
+              window.location.href = '/';
+            } else {
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+          }
+        },
+        { 
+          name: 'Características', 
+          path: '#features', 
+          icon: <MessageSquare className="h-4 w-4 mr-2" />,
+          onClick: (e: React.MouseEvent) => scrollToSection(e, '#features')
+        },
+        { 
+          name: 'Cómo Funciona', 
+          path: '#how-it-works', 
+          icon: <MessageSquare className="h-4 w-4 mr-2" />,
+          onClick: (e: React.MouseEvent) => scrollToSection(e, '#how-it-works')
+        },
+      ] as FooterLink[],
     },
     {
       title: 'Legal',
       links: [
-        { name: 'Términos de Servicio', path: '/terms', icon: <Shield className="h-4 w-4 mr-2" /> },
-        { name: 'Política de Privacidad', path: '/privacy', icon: <Shield className="h-4 w-4 mr-2" /> },
-        { name: 'Aviso Legal', path: '/legal', icon: <Shield className="h-4 w-4 mr-2" /> },
-      ],
+        { 
+          name: 'Términos de Servicio', 
+          path: '', 
+          icon: <Shield className="h-4 w-4 mr-2" />
+        },
+        { 
+          name: 'Política de Privacidad', 
+          path: '', 
+          icon: <Shield className="h-4 w-4 mr-2" />
+        },
+        { 
+          name: 'Aviso Legal', 
+          path: '', 
+          icon: <Shield className="h-4 w-4 mr-2" />
+        },
+      ] as FooterLink[],
     },
   ];
 
@@ -113,16 +166,13 @@ const Footer = () => {
               </h3>
               <ul className="space-y-3">
                 {section.links.map((link, linkIndex) => (
-                  <li key={linkIndex}>
-                    <Link
-                      to={link.path}
-                      className="text-aiuda-gray-300 hover:text-aiuda-coral transition-colors flex items-center group"
-                    >
-                      <span className="group-hover:translate-x-1 transition-transform">
+                  <li key={linkIndex} className="flex items-center">
+                    <span className="text-aiuda-gray-300 flex items-center">
+                      <span className="transition-transform">
                         {link.icon}
                       </span>
                       <span className="ml-2">{link.name}</span>
-                    </Link>
+                    </span>
                   </li>
                 ))}
               </ul>
