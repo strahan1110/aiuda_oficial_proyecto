@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import useChatHistory from '../hooks/useChatHistory';
 import ChatHistory from './ChatHistory';
 import { Send, Bot, User, MessageCircle, Loader2, Menu, X } from 'lucide-react';
@@ -11,7 +10,7 @@ export default function ChatInterface() {
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
-  const navigate = useNavigate();
+ 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   const {
